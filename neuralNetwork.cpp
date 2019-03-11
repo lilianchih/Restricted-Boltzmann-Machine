@@ -22,29 +22,6 @@ Gradient::Gradient(int N, int M){
     gb = VectorXd::Zero(M);
 }
 
-Gradient Gradient::operator+(Gradient& temp){
-    Gradient result(ga.size(), gb.size());
-    result.gW = gW + temp.gW;
-    result.ga = ga + temp.ga;
-    result.gb = gb + temp.gb;
-    return result;
-}
-
-Gradient Gradient::operator/(int N){
-    Gradient result(ga.size(), gb.size());
-    result.gW = gW/N;
-    result.ga = ga/N;
-    result.gb = gb/N;
-    return result;
-}
-
-Gradient& Gradient::operator=(Gradient temp){
-    gW = temp.gW;
-    ga = temp.ga;
-    gb = temp.gb;
-    return *this;
-}
-
 VectorXd Sigmoid(VectorXd x){
     VectorXd exponential = (-x.array()).exp();
     return (exponential + VectorXd::Ones(x.size())).cwiseInverse();
@@ -65,12 +42,10 @@ double Boltzmann_probability(const Network& network, double partition){
 
 double Partition_function(Network network, int N){
     double output = 0;
-    int dim = 1024;
-    string binary;
+    int dim = 1 << N;
     for (int i=0; i<dim; i++){
-        binary = bitset<10>(i).to_string();
         for (int j=0; j<N; j++){
-            network.v(j) = binary[j]-48;
+            network.v(j) = (int)(i % (1<<(N-j))) / (1<<(N-1-j));
         }
         output += Boltzmann_probability(network, 1.0);
     }
@@ -146,9 +121,9 @@ vector<VectorXd> readData(string filename, int N){
 
 int main(){  
     int spins = 10;
-    int hidden = 10;
+    int hidden = 40;
     Network network(spins, hidden);
-    cout<<"network spins=10 hidden=10"<<endl;
+    cout<<"network spins=10 hidden=40"<<endl;
     vector<VectorXd> data = readData("data.txt", spins);
     cout<<"\"data.txt\" size: "<<data.size()<<endl;    
 
@@ -159,7 +134,7 @@ int main(){
     Gradient sim_avg = grad_sim(network, data, M, K);
     double error = (data_avg.gW - sim_avg.gW).maxCoeff(); 
     double KL_div = 0;
-    while (error > 0.001){ //update parameters
+    while (error > 0.01){ //update parameters
         descent(network, learning_rate, data_avg, sim_avg);
         data_avg = grad_data(network, data);
         sim_avg = grad_sim(network, data, M, K);

@@ -34,8 +34,50 @@ public:
     VectorXd gb;
     void calculate(const Network& network);
     Gradient operator+(Gradient& temp);
+    Gradient operator-(Gradient& temp);
     Gradient operator/(int N);
+    Gradient operator*(double c);
     Gradient& operator=(Gradient temp);
 };
+
+Gradient Gradient::operator+(Gradient& temp){
+    Gradient result(ga.size(), gb.size());
+    result.gW = gW + temp.gW;
+    result.ga = ga + temp.ga;
+    result.gb = gb + temp.gb;
+    return result;
+}
+
+Gradient Gradient::operator-(Gradient& temp){
+    Gradient result(ga.size(), gb.size());
+    result.gW = gW - temp.gW;
+    result.ga = ga - temp.ga;
+    result.gb = gb - temp.gb;
+    return result;
+}
+
+Gradient Gradient::operator/(int N){
+    Gradient result(ga.size(), gb.size());
+    result.gW = gW/N;
+    result.ga = ga/N;
+    result.gb = gb/N;
+    return result;
+}
+
+Gradient Gradient::operator*(double c){
+    Gradient result(ga.size(), gb.size());
+    result.gW = gW*c;
+    result.ga = ga*c;
+    result.gb = gb*c;
+    return result;
+}
+
+Gradient& Gradient::operator=(Gradient temp){
+    gW = temp.gW;
+    ga = temp.ga;
+    gb = temp.gb;
+    return *this;
+}
+
 
 #endif
